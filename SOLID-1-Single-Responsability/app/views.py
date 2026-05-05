@@ -4,6 +4,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django import forms
 from django.urls import reverse
+from services import BD
 
 import sqlite3
 
@@ -13,7 +14,30 @@ class CategoriaForm(forms.Form):
     id = forms.IntegerField(label='ID', widget=forms.TextInput(attrs={'readonly': 'readonly'}), required=False)
     descricao = forms.CharField(label='Descrição', max_length=30, required=True)
 
-# Método responsavel por listar, incluir, alterar e excluir as Categorias.
+
+def salvar_categoria(request, acao):
+    form_data = request.POST
+    acao_form = form_data['acao']
+    conexao = BD.conexao_banco
+
+    if acao_form == 'Inclusão':
+        sql = f"INSERT INTO Categoria(descricao) VALUES('{form_data['descricao']}')"
+
+    elif acao_form == 'Exclusão':
+        sql = f"DELETE FROM Categoria WHERE id = {form_data['id']}"
+
+    else:
+        sql = f'''
+            UPDATE Categoria 
+            SET descricao = '{form_data['descricao']}' 
+            WHERE id = {form_data['id']}
+        '''
+
+    # cria um cursor() e executa o SQL informado
+    conexao.cursor().execute(sql)
+    conexao.commit()
+
+
 def categorias(request, acao=None, id=None):
     '''
     Método responsavel por receber todas as rotas URL do cadastro de Categorias.
@@ -28,49 +52,22 @@ def categorias(request, acao=None, id=None):
 
     try:
         # obtem a conexao com o banco de dados
-        conexao = sqlite3.connect('db_solid.sqlite3')
-        # comando para não permitir DELETE CASCADE (exclusão em cascata)
-        conexao.execute("PRAGMA foreign_keys = ON;") 
+        conexao = BD.conexao_banco()
 
         # Listar registros
         # 'categorias/': Exibir a pagina de listagem
         if acao is None:
             # define o comando SQL que será executado
-            sql = '''
-                SELECT  id, 
-                        descricao
-                FROM Categoria 
-                ORDER BY descricao
-            '''
-            
-            # cria um cursor(), executa o SELECT informado e traz os todos os registros
-            registros = conexao.cursor().execute(sql).fetchall()
+            registros = BD.listar_registros()
 
-            # define a pagina a ser carregada, adicionando os registros das tabelas 
+            # define     a pagina a ser carregada, adicionando os registros das tabelas 
             return render(request, 'categorias_listar.html', context={'registros': registros})
+            
         
         # Salvar registro
         # 'categorias/salvar/': insere, altera ou exclui um registro
         elif acao == 'salvar':
-            form_data = request.POST
-            acao_form = form_data['acao']
-
-            if acao_form == 'Inclusão':
-                sql = f"INSERT INTO Categoria(descricao) VALUES('{form_data['descricao']}')"
-
-            elif acao_form == 'Exclusão':
-                sql = f"DELETE FROM Categoria WHERE id = {form_data['id']}"
-
-            else:
-                sql = f'''
-                    UPDATE Categoria 
-                    SET descricao = '{form_data['descricao']}' 
-                    WHERE id = {form_data['id']}
-                '''
-
-            # cria um cursor() e executa o SQL informado
-            conexao.cursor().execute(sql)
-            conexao.commit()
+            
 
             # Sempre retornar um HttpResponseRedirect após processar dados "POST". 
             # Isso evita que os dados sejam postados 2 vezes caso usuário clicar "Voltar".
