@@ -37,6 +37,16 @@ def salvar_categoria(request, acao):
     conexao.cursor().execute(sql)
     conexao.commit()
 
+def exibir_categorias(request):
+    conexao = BD.conexao_banco()
+    # define o comando SQL que será executado
+    registros = BD.listar_registros()
+
+    # define     a pagina a ser carregada, adicionando os registros das tabelas 
+    return render(request, 'categorias_listar.html', context={'registros': registros})
+
+def salvar_catgorias(request):
+    return HttpResponseRedirect( reverse("categorias") )
 
 def categorias(request, acao=None, id=None):
     '''
