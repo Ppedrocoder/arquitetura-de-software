@@ -4,7 +4,8 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django import forms
 from django.urls import reverse
-from services import BD
+from .services import BD, ProdutoService, CategoriaService
+from .repository import CategoriaRepository, ProdutoRepository
 
 import sqlite3
 
@@ -15,38 +16,64 @@ class CategoriaForm(forms.Form):
     descricao = forms.CharField(label='Descrição', max_length=30, required=True)
 
 
-def salvar_categoria(request, acao):
-    form_data = request.POST
-    acao_form = form_data['acao']
-    conexao = BD.conexao_banco
+def salvar_categoria(request):
+    try:
+        acao = request.POST.get('acao')
+        id_categoria = request.POST.get('id')
+        descricao = request.POST.get('descricao')
+        
+        repository = CategoriaRepository(BD.conexao_banco())
+        service = CategoriaService(repository)
+        
+        # Service roteia a operação baseado na ação
+        service.processar_categoria(acao, descricao, id_categoria)
 
-    if acao_form == 'Inclusão':
-        sql = f"INSERT INTO Categoria(descricao) VALUES('{form_data['descricao']}')"
+        return HttpResponseRedirect(reverse("categorias"))
+    except Exception as err:
+        return render(request, 'home.html', context={'ERRO': err})
 
-    elif acao_form == 'Exclusão':
-        sql = f"DELETE FROM Categoria WHERE id = {form_data['id']}"
+def listar_categorias(request):
+    try:
+        repository = CategoriaRepository(BD.conexao_banco())
+        service = CategoriaService(repository)
+        # define o comando SQL que será executado
+        registros = service.listar_registros()
+        # define     a pagina a ser carregada, adicionando os registros das tabelas 
+        return render(request, 'categorias_listar.html', context={'registros': registros})
+    except Exception as err:
+        return render(request, 'home.html', context={'ERRO': err})
 
-    else:
-        sql = f'''
-            UPDATE Categoria 
-            SET descricao = '{form_data['descricao']}' 
-            WHERE id = {form_data['id']}
-        '''
+def incluir_categoria(request):
+    return render(request, 'categorias_editar.html',
+                           context={'acao': 'Inclusão', 'form': CategoriaForm() })
 
-    # cria um cursor() e executa o SQL informado
-    conexao.cursor().execute(sql)
-    conexao.commit()
+def alterar_categoria(request, id):
+    try:
+        # seleciona o registro pelo id informado
+        repository = CategoriaRepository(BD.conexao_banco())
+        service = CategoriaService(repository)
+        registro = service.obter_registro(id)
+        registro_dict = {'id': registro[0], 'descricao': registro[1]}
+        acao = 'Alteração'
 
-def exibir_categorias(request):
-    conexao = BD.conexao_banco()
-    # define o comando SQL que será executado
-    registros = BD.listar_registros()
+        return render(request, 'categorias_editar.html', 
+                        context={'acao': acao, 'form': CategoriaForm(initial=registro_dict) })
+    except Exception as err:
+        return render(request, 'home.html', context={'ERRO': err})
 
-    # define     a pagina a ser carregada, adicionando os registros das tabelas 
-    return render(request, 'categorias_listar.html', context={'registros': registros})
+def excluir_categoria(request, id):
+    try:
+        # seleciona o registro pelo id informado
+        repository = CategoriaRepository(BD.conexao_banco())
+        service = CategoriaService(repository)
+        registro = service.obter_registro(id)
+        registro_dict = {'id': registro[0], 'descricao': registro[1]}
+        acao = 'Exclusão'
 
-def salvar_catgorias(request):
-    return HttpResponseRedirect( reverse("categorias") )
+        return render(request, 'categorias_editar.html', 
+                        context={'acao': acao, 'form': CategoriaForm(initial=registro_dict) })
+    except Exception as err:
+        return render(request, 'home.html', context={'ERRO': err})
 
 def categorias(request, acao=None, id=None):
     '''
@@ -68,7 +95,7 @@ def categorias(request, acao=None, id=None):
         # 'categorias/': Exibir a pagina de listagem
         if acao is None:
             # define o comando SQL que será executado
-            registros = BD.listar_registros()
+            registros = CategoriaService.listar_registros()
 
             # define     a pagina a ser carregada, adicionando os registros das tabelas 
             return render(request, 'categorias_listar.html', context={'registros': registros})
@@ -140,6 +167,88 @@ class ProdutoForm(forms.Form):
             # carrega as categorias no <select> da página usando o ChoiceField
             self.fields['categoria_id'].choices = categorias
 
+
+def listar_produtos(request):
+    try:
+        repository = ProdutoRepository(BD.conexao_banco())
+        service = ProdutoService(repository)
+        registros = service.listar_registros()
+
+        # define a pagina a ser carregada, adicionando os registros das tabelas 
+        return render(request, 'produtos_listar.html', context={'registros': registros})
+    except Exception as err:
+        return render(request, 'home.html', context={'ERRO': err})
+
+def salvar_produto(request):
+    try:
+        acao = request.POST.get('acao')
+        id_produto = request.POST.get('id')
+        descricao = request.POST.get('descricao')
+        preco_unitario = request.POST.get('preco_unitario')
+        quantidade_estoque = request.POST.get('quantidade_estoque')
+        categoria_id = request.POST.get('categoria_id')
+        
+        repository = ProdutoRepository(BD.conexao_banco())
+        service = ProdutoService(repository)
+        
+        # Service roteia a operação baseado na ação
+        service.processar_produto(acao, descricao, preco_unitario, quantidade_estoque, categoria_id, id_produto)
+
+        # Sempre retornar um HttpResponseRedirect após processar dados "POST". 
+        # Isso evita que os dados sejam postados 2 vezes caso usuário clicar "Voltar".
+        return HttpResponseRedirect( reverse("produtos") )
+    except Exception as err:
+        return render(request, 'home.html', context={'ERRO': err})
+
+def incluir_produto(request):
+    return render(request, 'produtos_editar.html',
+                           context={'acao': 'Inclusão', 'form': ProdutoForm() })
+
+def alterar_produto(request, id):
+    try:
+        repository = ProdutoRepository(BD.conexao_banco())
+        service = ProdutoService(repository)
+        registro = service.obter_registro(id)
+        if not registro:
+            raise Exception(f"Produto com ID {id} não encontrado")
+
+        registro_dict = {
+            'id': registro[0],
+            'descricao': registro[1],
+            'preco_unitario': registro[2],
+            'quantidade_estoque': registro[3],
+            'categoria_id': registro[4]
+        }
+
+        acao = 'Alteração'
+
+        return render(request, 'produtos_editar.html', 
+                        context={'acao': acao, 'form': ProdutoForm(initial=registro_dict) })
+    except Exception as err:
+        return render(request, 'home.html', context={'ERRO': err})
+
+def excluir_produto(request, id):
+    try:
+        repository = ProdutoRepository(BD.conexao_banco())
+        service = ProdutoService(repository)
+        registro = service.obter_registro(id)
+        if not registro:
+            raise Exception(f"Produto com ID {id} não encontrado")
+
+        registro_dict = {
+            'id': registro[0],
+            'descricao': registro[1],
+            'preco_unitario': registro[2],
+            'quantidade_estoque': registro[3],
+            'categoria_id': registro[4]
+        }
+
+        acao = 'Exclusão'
+
+        return render(request, 'produtos_editar.html', 
+                        context={'acao': acao, 'form': ProdutoForm(initial=registro_dict) })
+    except Exception as err:
+        return render(request, 'home.html', context={'ERRO': err})
 
 # Método responsavel por listar, incluir, alterar e excluir os Produtos.
 def produtos(request, acao=None, id=None):

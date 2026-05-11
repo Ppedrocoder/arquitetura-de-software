@@ -7,7 +7,7 @@
 {% block conteudo %}
 
     <div style="margin-left: 5px;">
-        <a class="btn medium" href="{% url 'produtos' acao='incluir' %}">Incluir</a>
+        <a class="btn medium" href="{% url 'produtos_incluir' %}">Incluir</a>
     </div>
 
     <!-- TABELA HTML COM OS REGISTROS -->
@@ -34,9 +34,9 @@
                 <td>{{ reg.3|default_if_none:'' }}</td>
                 <td>{{ reg.5 }}</td>
                 <td>
-                    <a class="btn small" href="{% url 'produtos' acao='alterar' id=reg.0 %}">Alterar</a>
+                    <a class="btn small" href="{% url 'produtos_alterar' id=reg.0 %}">Alterar</a>
                     
-                    <a class="btn-del small" href="{% url 'produtos' acao='excluir' id=reg.0 %}">Excluir</a>
+                    <a class="btn-del small" href="{% url 'produtos_excluir' id=reg.0 %}">Excluir</a>
                 </td>
             </tr>
             {% endfor %}

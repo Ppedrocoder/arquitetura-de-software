@@ -6,7 +6,7 @@
 
 {% block conteudo %}
 
-<form action="/produtos/salvar/" method="post">
+<form action="{% url 'produtos_salvar' %}" method="post">
 
     {% csrf_token %}
 
