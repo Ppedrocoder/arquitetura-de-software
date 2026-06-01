@@ -1,28 +1,40 @@
 import sqlite3
-from .repository import CategoriaRepository, ProdutoRepository
+from .interfaces import ICategoriaService, IProdutoService, ICategoriaDAO, IProdutoDAO
 
 
-class BD():
-    """Gerenciador de conexão com banco de dados"""
+class BD:
+    """Gerenciador de conexão com banco de dados
+    
+    Responsável pela criação e configuração de conexões com o banco.
+    Segue o padrão de um Service Locator para acesso ao banco.
+    """
     
     @staticmethod
     def conexao_banco():
-        """Cria e retorna uma conexão com o banco de dados"""
+        """Cria e retorna uma conexão com o banco de dados
+        
+        Returns:
+            Conexão sqlite3 configurada
+        """
         conexao = sqlite3.connect('db_solid.sqlite3')
         # Habilita suporte a chaves estrangeiras
         conexao.execute("PRAGMA foreign_keys = ON;")
         return conexao
 
 
-class CategoriaService:
-    """Service de negócio para Categorias"""
+class CategoriaService(ICategoriaService):
+    """Service de negócio para Categorias
     
-    def __init__(self, repository):
-        """
-        Inicializa o service com um repository
+    Implementa a lógica de negócio de Categoria.
+    Segue o princípio Single Responsibility: responsável apenas pelas regras de negócio.
+    Depende de abstrações (ICategoriaDAO) - Dependency Inversion.
+    """
+    
+    def __init__(self, repository: ICategoriaDAO):
+        """Inicializa o service com um repository
         
         Args:
-            repository: Instância de CategoriaRepository
+            repository: Instância que implementa ICategoriaDAO (injeção de dependência)
         """
         self.repository = repository
     
@@ -175,15 +187,19 @@ class CategoriaService:
             return self.salvar_categoria(descricao)
 
 
-class ProdutoService:
-    """Service de negócio para Produtos"""
+class ProdutoService(IProdutoService):
+    """Service de negócio para Produtos
     
-    def __init__(self, repository):
-        """
-        Inicializa o service com um repository
+    Implementa a lógica de negócio de Produto.
+    Segue o princípio Single Responsibility: responsável apenas pelas regras de negócio.
+    Depende de abstrações (IProdutoDAO) - Dependency Inversion.
+    """
+    
+    def __init__(self, repository: IProdutoDAO):
+        """Inicializa o service com um repository
         
         Args:
-            repository: Instância de ProdutoRepository
+            repository: Instância que implementa IProdutoDAO (injeção de dependência)
         """
         self.repository = repository
     
