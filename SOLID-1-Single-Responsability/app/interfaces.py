@@ -79,13 +79,6 @@ class IService(ABC):
     def obter_registro(self, id):
         """Obtém um registro pelo ID"""
         pass
-    
-    """
-    @abstractmethod
-    def processar_registro(self, acao, *args, **kwargs):
-        Processa uma operação (Inclusão, Alteração, Exclusão)
-        pass
-    """
 
 
 class ICategoriaService(IService):
