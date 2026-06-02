@@ -1,8 +1,3 @@
-"""
-Interfaces abstratas para o padrão DAO, Repository e Service
-Aplicam os princípios SOLID: Dependency Inversion, Liskov Substitution, Interface Segregation
-"""
-
 from abc import ABC, abstractmethod
 
 

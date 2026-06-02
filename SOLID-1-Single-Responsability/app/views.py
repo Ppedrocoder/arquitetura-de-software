@@ -1,19 +1,9 @@
-"""
-Views da aplicação Web Store
-Camada de apresentação - responsável apenas por processar requisições e renderizar templates.
-Usa Services para lógica de negócio e não acessa banco de dados diretamente.
-Segue princípios SOLID: Single Responsibility, Dependency Inversion.
-"""
-
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django import forms
 from django.urls import reverse
 
 from .factory import ServiceFactory
-
-
-# ==================== FORMULÁRIOS ====================
 
 class CategoriaForm(forms.Form):
     """Formulário para edição de categorias"""
@@ -38,11 +28,7 @@ def salvar_categoria(request):
         acao = request.POST.get('acao')
         id_categoria = request.POST.get('id')
         descricao = request.POST.get('descricao')
-        
-        # Usa factory para criar service - inversão de dependência
         service = ServiceFactory.criar_categoria_service()
-        
-        # Service roteia a operação baseado na ação
         service.processar_categoria(acao, descricao, id_categoria)
 
         return HttpResponseRedirect(reverse("categorias"))
@@ -108,7 +94,6 @@ def excluir_categoria(request, id):
         return render(request, 'home.html', context={'ERRO': err})
 
 
-# formulario utilizado para edicao de registros de produtos
 class ProdutoForm(forms.Form):
     id = forms.IntegerField(label='ID', widget=forms.TextInput(attrs={'readonly': 'readonly'}), required=False)
     descricao = forms.CharField(label='Descrição', max_length=30, required=True)
@@ -116,15 +101,10 @@ class ProdutoForm(forms.Form):
     quantidade_estoque = forms.IntegerField(label='Qtd. Estoque', required=True)
     categoria_id = forms.ChoiceField(label='Categoria', required=True)
 
-    # construtor do Formulario
     def __init__(self, *args, **kwargs):
-            # chama construtor da classe-Pai
             super().__init__(*args, **kwargs)
-            # usa factory para obter service de categorias
             service = ServiceFactory.criar_categoria_service()
-            # obtem os registros da tabela Categoria
             categorias = service.listar_registros()
-            # carrega as categorias no <select> da página usando o ChoiceField
             self.fields['categoria_id'].choices = categorias
 
 
@@ -202,10 +182,8 @@ def excluir_produto(request, id):
         return render(request, 'home.html', context={'ERRO': err})
 
 
-# Exibe a página inicial da aplicação
 def home(request):
     '''Exibe a pagina inicial da aplicação'''
-    # define a página HTML (template) que deverá será carregada
     template = 'home.html'
     return render(request, template)
 

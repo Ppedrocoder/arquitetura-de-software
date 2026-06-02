@@ -1,20 +1,8 @@
-"""
-Factory para criação de instâncias de Services e Repositories
-Aplicação do padrão Factory Pattern.
-Centraliza a criação de objetos e facilita a inversão de controle.
-"""
-
 from .services import BD, CategoriaService, ProdutoService
 from .repository import CategoriaRepository, ProdutoRepository
 
 
 class ServiceFactory:
-    """Factory para criar instâncias de Services
-    
-    Centraliza a criação de Services com suas dependências.
-    Permite trocar implementações facilmente (ex: trocar BD).
-    Facilita testes unitários com mocks.
-    """
     
     @staticmethod
     def criar_categoria_service():

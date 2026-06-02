@@ -2,11 +2,6 @@ from .interfaces import ICategoriaDAO, IProdutoDAO
 
 
 class CategoriaRepository(ICategoriaDAO):
-    """Repository para acesso aos dados de Categorias
-    
-    Implementa o padrão DAO, encapsulando todo acesso aos dados de Categoria.
-    Segue o princípio Single Responsibility: responsável apenas pelo acesso aos dados.
-    """
     
     def __init__(self, db):
         """Inicializa repository com conexão ao banco de dados
@@ -61,11 +56,6 @@ class CategoriaRepository(ICategoriaDAO):
 
 
 class ProdutoRepository(IProdutoDAO):
-    """Repository para acesso aos dados de Produtos
-    
-    Implementa o padrão DAO, encapsulando todo acesso aos dados de Produto.
-    Segue o princípio Single Responsibility: responsável apenas pelo acesso aos dados.
-    """
     
     def __init__(self, db):
         """Inicializa repository com conexão ao banco de dados
