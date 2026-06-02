@@ -274,9 +274,6 @@ class ProdutoService(IProdutoService):
             if not id or id <= 0:
                 raise ValueError("ID deve ser um número válido")
             
-            #if not descricao or len(descricao.strip()) == 0:
-            #   raise ValueError("Descrição não pode estar vazia")
-            
             descricao = descricao.strip()
             
             if len(descricao) > 50:
