@@ -1,8 +1,14 @@
-class CategoriaRepository:
-    """Repository para acesso aos dados de Categorias"""
+from .interfaces import ICategoriaDAO, IProdutoDAO
+
+
+class CategoriaRepository(ICategoriaDAO):
     
     def __init__(self, db):
-        """Inicializa repository com conexão ao banco de dados"""
+        """Inicializa repository com conexão ao banco de dados
+        
+        Args:
+            db: Conexão com o banco de dados (injeção de dependência)
+        """
         self.db = db
 
     def listar_registros(self):
@@ -49,11 +55,14 @@ class CategoriaRepository:
         return self.db.cursor().rowcount 
 
 
-class ProdutoRepository:
-    """Repository para acesso aos dados de Produtos"""
+class ProdutoRepository(IProdutoDAO):
     
     def __init__(self, db):
-        """Inicializa repository com conexão ao banco de dados"""
+        """Inicializa repository com conexão ao banco de dados
+        
+        Args:
+            db: Conexão com o banco de dados (injeção de dependência)
+        """
         self.db = db
 
     def listar_registros(self):

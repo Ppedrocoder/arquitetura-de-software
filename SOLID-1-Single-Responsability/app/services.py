@@ -1,28 +1,28 @@
 import sqlite3
-from .repository import CategoriaRepository, ProdutoRepository
+from .interfaces import ICategoriaService, IProdutoService, ICategoriaDAO, IProdutoDAO
 
 
-class BD():
-    """Gerenciador de conexão com banco de dados"""
+class BD:
     
     @staticmethod
     def conexao_banco():
-        """Cria e retorna uma conexão com o banco de dados"""
+        """Cria e retorna uma conexão com o banco de dados
+        
+        Returns:
+            Conexão sqlite3 configurada
+        """
         conexao = sqlite3.connect('db_solid.sqlite3')
-        # Habilita suporte a chaves estrangeiras
         conexao.execute("PRAGMA foreign_keys = ON;")
         return conexao
 
 
-class CategoriaService:
-    """Service de negócio para Categorias"""
+class CategoriaService(ICategoriaService):
     
-    def __init__(self, repository):
-        """
-        Inicializa o service com um repository
+    def __init__(self, repository: ICategoriaDAO):
+        """Inicializa o service com um repository
         
         Args:
-            repository: Instância de CategoriaRepository
+            repository: Instância que implementa ICategoriaDAO (injeção de dependência)
         """
         self.repository = repository
     
@@ -50,7 +50,6 @@ class CategoriaService:
         """
         try:
             id = int(id)
-            # Validação de negócio
             if not id or id <= 0:
                 raise ValueError("ID deve ser um número válido")
             
@@ -75,16 +74,13 @@ class CategoriaService:
             ID da categoria criada
         """
         try:
-            # Validações de negócio
             if not descricao or len(descricao.strip()) == 0:
                 raise ValueError("Descrição não pode estar vazia")
-            
+
             descricao = descricao.strip()
-            
             if len(descricao) > 30:
                 raise ValueError("Descrição não pode ter mais de 30 caracteres")
-            
-            # Chamar repository para salvar
+
             return self.repository.salvar_registro(descricao)
         except ValueError as e:
             raise ValueError(str(e))
@@ -104,23 +100,19 @@ class CategoriaService:
         """
         try:
             id = int(id)
-            # Validações de negócio
             if not id or id <= 0:
                 raise ValueError("ID deve ser um número válido")
-            
+
             if not descricao or len(descricao.strip()) == 0:
                 raise ValueError("Descrição não pode estar vazia")
-            
+
             descricao = descricao.strip()
-            
             if len(descricao) > 30:
                 raise ValueError("Descrição não pode ter mais de 30 caracteres")
-            
-            # Verificar se categoria existe
+
             if not self.repository.obter_registro(id):
                 raise ValueError(f"Categoria com ID {id} não encontrada")
-            
-            # Chamar repository para alterar
+
             return self.repository.alterar_registro(id, descricao)
         except ValueError as e:
             raise ValueError(str(e))
@@ -139,15 +131,12 @@ class CategoriaService:
         """
         try:
             id = int(id)
-            # Validações de negócio
             if not id or id <= 0:
                 raise ValueError("ID deve ser um número válido")
-            
-            # Verificar se categoria existe
+
             if not self.repository.obter_registro(id):
                 raise ValueError(f"Categoria com ID {id} não encontrada")
-            
-            # Chamar repository para deletar
+
             return self.repository.excluir_registro(id)
         except ValueError as e:
             raise ValueError(str(e))
@@ -171,19 +160,17 @@ class CategoriaService:
             return self.excluir_categoria(id)
         elif acao == 'Alteração':
             return self.alterar_categoria(id, descricao)
-        else:  # Inclusão ou padrão
+        else: 
             return self.salvar_categoria(descricao)
 
 
-class ProdutoService:
-    """Service de negócio para Produtos"""
+class ProdutoService(IProdutoService):
     
-    def __init__(self, repository):
-        """
-        Inicializa o service com um repository
+    def __init__(self, repository: IProdutoDAO):
+        """Inicializa o service com um repository
         
         Args:
-            repository: Instância de ProdutoRepository
+            repository: Instância que implementa IProdutoDAO (injeção de dependência)
         """
         self.repository = repository
     
@@ -211,7 +198,6 @@ class ProdutoService:
         """
         try:
             id = int(id)
-            # Validação de negócio
             if not id or id <= 0:
                 raise ValueError("ID deve ser um número válido")
             
@@ -239,7 +225,6 @@ class ProdutoService:
             ID do produto criado
         """
         try:
-            # Validações de negócio
             if not descricao or len(descricao.strip()) == 0:
                 raise ValueError("Descrição não pode estar vazia")
             
@@ -264,7 +249,6 @@ class ProdutoService:
             if categoria_id <= 0:
                 raise ValueError("Categoria inválida")
             
-            # Chamar repository para salvar
             return self.repository.salvar_registro(descricao, preco_unitario, quantidade_estoque, categoria_id)
         except ValueError as e:
             raise ValueError(str(e))
@@ -287,12 +271,8 @@ class ProdutoService:
         """
         try:
             id = int(id)
-            # Validações de negócio
             if not id or id <= 0:
                 raise ValueError("ID deve ser um número válido")
-            
-            #if not descricao or len(descricao.strip()) == 0:
-            #   raise ValueError("Descrição não pode estar vazia")
             
             descricao = descricao.strip()
             
@@ -315,11 +295,9 @@ class ProdutoService:
             if categoria_id <= 0:
                 raise ValueError("Categoria inválida")
             
-            # Verificar se produto existe
             if not self.repository.obter_registro(id):
                 raise ValueError(f"Produto com ID {id} não encontrado")
             
-            # Chamar repository para alterar
             return self.repository.alterar_registro(id, descricao, preco_unitario, quantidade_estoque, categoria_id)
         except ValueError as e:
             raise ValueError(str(e))
@@ -338,15 +316,12 @@ class ProdutoService:
         """
         try:
             id = int(id)
-            # Validações de negócio
             if not id or id <= 0:
                 raise ValueError("ID deve ser um número válido")
             
-            # Verificar se produto existe
             if not self.repository.obter_registro(id):
                 raise ValueError(f"Produto com ID {id} não encontrado")
             
-            # Chamar repository para deletar
             return self.repository.excluir_registro(id)
         except ValueError as e:
             raise ValueError(str(e))
@@ -373,5 +348,5 @@ class ProdutoService:
             return self.excluir_produto(id)
         elif acao == 'Alteração':
             return self.alterar_produto(id, descricao, preco_unitario, quantidade_estoque, categoria_id)
-        else:  # Inclusão ou padrão
+        else:  
             return self.salvar_produto(descricao, preco_unitario, quantidade_estoque, categoria_id)
