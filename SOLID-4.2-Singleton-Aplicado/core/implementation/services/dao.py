@@ -10,36 +10,46 @@ from termcolor import colored, cprint
 
 class ConexaoBD(IConexaoBD):
 
-    # variável para armazenar a instância única da classe (singleton)
-    __singleton = None
+    MAX_CONEXOES = 5
+ 
+    _pool: list["ConexaoBD"] = []
+    _contador = 0
 
     # método especial __new__ é chamado antes do __init__ e 
     # é responsável por criar a instância da classe
     def __new__(cls):
-        
-        # se nenhuma instância foi criada ainda, cria uma nova 
-        # instância e armazena na variável __singleton
-        if cls.__singleton is None:
-        
-            # cria instância única (singleton)
-            cls.__singleton = super().__new__(cls)
-
-            # cria uma conexao com o BD e armazena na instância única (singleton)
-            cls.__singleton.__conexao = sqlite3.connect('db_solid.sqlite3')
-            
-            # comando para não permitir DELETE CASCADE (exclusão em cascata)
-            cls.__singleton.__conexao.execute("PRAGMA foreign_keys = ON;") 
-        
-            # mensagem para debug
-            cprint(f'\n ** Conectou ao Banco de Dados ** \n', 
-                   "white", "on_light_red", attrs=['bold'])
-
-        # retorna a instância única da conexão com o BD
-        return cls.__singleton
+ 
+        # enquanto não atingiu o limite, cria novas instâncias
+        if len(cls._pool) < cls.MAX_CONEXOES:
+ 
+            instancia = super().__new__(cls)
+            instancia._conexao = sqlite3.connect('db_solid.sqlite3', check_same_thread=False)
+            instancia._conexao.execute("PRAGMA foreign_keys = ON;")
+            instancia._id = len(cls._pool) + 1
+ 
+            cls._pool.append(instancia)
+ 
+            cprint(
+                f'\n ** Conectou ao BD — nova instância criada: #{instancia._id} de {cls.MAX_CONEXOES} ** \n',
+                "white", "on_light_red", attrs=['bold']
+            )
+ 
+        else:
+            # pool cheio: reutiliza as instâncias já criadas
+            idx = cls._contador % cls.MAX_CONEXOES
+            cls._contador += 1
+            instancia = cls._pool[idx]
+ 
+            cprint(
+                f'\n ** Conectou ao BD — utilizando instância #{instancia._id} de {cls.MAX_CONEXOES} ** \n',
+                "white", "on_light_red", attrs=['bold']
+            )
+ 
+        return instancia
 
     def obter_conexao(self):
         '''Estabelece a conexao com o SQLite usando o padrão Singleton'''
-        return self.__singleton.__conexao
+        return self._conexao
     
     def executar_comando(self, sql_comando, commit=True) -> Any:
         '''Executa um comando SQL no BD (geralmente um INSERT, UPDATE ou DELETE)'''
